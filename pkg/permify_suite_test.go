@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestPermit(t *testing.T) {
+func TestPermify(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Permit Suite")
 }

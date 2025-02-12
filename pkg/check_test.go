@@ -1,91 +1,47 @@
 package connectpermit
 
 import (
+	permifypayload "buf.build/gen/go/permifyco/permify/protocolbuffers/go/base/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/permitio/permit-golang/pkg/enforcement"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 var _ = Describe("toCheckRequest", func() {
 	When("attributes are present", func() {
 		It("should include them on the CheckRequest", func(ctx SpecContext) {
-			user := User{
-				Key: "abcde",
-				Attributes: map[string]any{
-					"foo": "bar",
-				},
+			attributes := Attributes{
+				"foo": "bar",
+			}
+			user := Resource{
+				ID:   "abcde",
+				Type: "user",
 			}
 
 			check := Check{
-				Action: "edit",
-				Resource: Resource{
-					Type:   "Widget",
-					Key:    "1234",
-					Tenant: "fghi",
-					Attributes: map[string]any{
-						"baz": "blah",
-					},
+				Permission: "edit",
+				Entity: &Resource{
+					Type: "Widget",
+					ID:   "1234",
 				},
 			}
-			req := check.toCheckRequest(&user)
+			req, err := check.toCheckRequest(&user, attributes)
+			Expect(err).To(BeNil())
 
-			Expect(req).To(BeEquivalentTo(enforcement.CheckRequest{
-				User: enforcement.User{
-					Key: "abcde",
-					Attributes: map[string]any{
-						"foo": "bar",
-					},
+			data, err := structpb.NewStruct(attributes)
+			Expect(req).To(BeEquivalentTo(&permifypayload.PermissionCheckRequest{
+				TenantId: "t1",
+				Subject: &permifypayload.Subject{
+					Id:   user.ID,
+					Type: user.Type,
 				},
-				Action: "edit",
-				Resource: enforcement.Resource{
-					Type:   "Widget",
-					Key:    "1234",
-					Tenant: "fghi",
-					Attributes: map[string]any{
-						"baz": "blah",
-					},
+				Permission: "edit",
+				Entity: &permifypayload.Entity{
+					Type: "Widget",
+					Id:   "1234",
 				},
-			}))
-		})
-	})
-
-	When("resource key is empty", func() {
-		It("should set the key to *", func(ctx SpecContext) {
-			user := User{
-				Key: "abcde",
-				Attributes: map[string]any{
-					"foo": "bar",
-				},
-			}
-
-			check := Check{
-				Action: "edit",
-				Resource: Resource{
-					Type:   "Widget",
-					Key:    "",
-					Tenant: "fghi",
-					Attributes: map[string]any{
-						"baz": "blah",
-					},
-				},
-			}
-			req := check.toCheckRequest(&user)
-
-			Expect(req).To(BeEquivalentTo(enforcement.CheckRequest{
-				User: enforcement.User{
-					Key: "abcde",
-					Attributes: map[string]any{
-						"foo": "bar",
-					},
-				},
-				Action: "edit",
-				Resource: enforcement.Resource{
-					Type:   "Widget",
-					Key:    "*",
-					Tenant: "fghi",
-					Attributes: map[string]any{
-						"baz": "blah",
-					},
+				Context: &permifypayload.Context{
+					Data: data,
 				},
 			}))
 		})

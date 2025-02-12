@@ -31,6 +31,6 @@ func tokenExtractor(req connect.AnyRequest) (string, error) {
 	return "mocktoken", nil
 }
 
-func claimsMapper(_ *validator.ValidatedClaims) (*User, error) {
-	return &User{Key: "abcde"}, nil
+func claimsMapper(_ *validator.ValidatedClaims) (*Resource, Attributes, error) {
+	return &Resource{ID: "abcde"}, nil, nil
 }

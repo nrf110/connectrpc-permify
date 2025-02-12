@@ -6,7 +6,7 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 )
 
-type ClaimsMapper func(claims *validator.ValidatedClaims) (*User, error)
+type ClaimsMapper func(claims *validator.ValidatedClaims) (*Resource, Attributes, error)
 
 type CustomClaimsMapper[T validator.CustomClaims] func(T) (Attributes, error)
 
@@ -22,21 +22,21 @@ func DefaultCustomClaimsMapper[T validator.CustomClaims]() CustomClaimsMapper[T]
 }
 
 func DefaultClaimsMapper[T validator.CustomClaims](customClaimsMapper CustomClaimsMapper[T]) ClaimsMapper {
-	return func(claims *validator.ValidatedClaims) (*User, error) {
+	return func(claims *validator.ValidatedClaims) (*Resource, Attributes, error) {
 		subject := claims.RegisteredClaims.Subject
 		customClaims, ok := claims.CustomClaims.(T)
 		if !ok {
-			return nil, fmt.Errorf("unexpected custom claims type")
+			return nil, nil, fmt.Errorf("unexpected custom claims type")
 		}
 
 		attributes, err := customClaimsMapper(customClaims)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		return &User{
-			Key:        subject,
-			Attributes: attributes,
-		}, nil
+		return &Resource{
+			ID:   subject,
+			Type: "user",
+		}, attributes, nil
 	}
 }

@@ -23,16 +23,17 @@ var _ = Describe("DefaultClaimsMapper", func() {
 
 	It("should set the subject as the key", func(ctx SpecContext) {
 		mapper := DefaultClaimsMapper(DefaultCustomClaimsMapper[*testCustomClaims]())
-		user, err := mapper(claims)
+		user, _, err := mapper(claims)
 		Expect(err).To(BeNil())
-		Expect(user.Key).To(Equal(claims.RegisteredClaims.Subject))
+		Expect(user.ID).To(Equal(claims.RegisteredClaims.Subject))
 	})
 
 	It("should convert the custom claims to a map of attributes", func(ctx SpecContext) {
 		mapper := DefaultClaimsMapper(DefaultCustomClaimsMapper[*testCustomClaims]())
-		user, err := mapper(claims)
+		user, attributes, err := mapper(claims)
 		Expect(err).To(BeNil())
-		Expect(user.Attributes).To(HaveKeyWithValue("Roles", []string{"admin"}))
-		Expect(user.Attributes).To(HaveKeyWithValue("OrganizationID", "acme"))
+		Expect(user.ID).To(Equal(claims.RegisteredClaims.Subject))
+		Expect(attributes).To(HaveKeyWithValue("Roles", []string{"admin"}))
+		Expect(attributes).To(HaveKeyWithValue("OrganizationID", "acme"))
 	})
 })

@@ -25,10 +25,12 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 		It("should invoke the next handler when the check call returns true", func(ctx SpecContext) {
 			mock.SetUp(GinkgoT())
 			client := mock.Mock[CheckClient]()
-			mock.When(client.Check(mock.Any[*User](), mock.Any[CheckConfig]())).ThenReturn(true, nil)
+			mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+				ThenReturn(true, nil)
 
 			tokenValidator := mock.Mock[TokenValidator]()
-			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).ThenReturn(claims, nil)
+			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
+				ThenReturn(claims, nil)
 
 			req := mock.Mock[connect.AnyRequest]()
 			mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
@@ -36,7 +38,7 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 			next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 				return res, nil
 			})
-			interceptor := NewPermitInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+			interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
 			result, err := interceptor(next)(ctx, req)
 			Expect(err).To(BeNil())
 			Expect(result).To(Equal(res))
@@ -45,7 +47,8 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 		It("should invoke the next handler when the CheckConfig is public", func(ctx SpecContext) {
 			mock.SetUp(GinkgoT())
 			client := mock.Mock[CheckClient]()
-			mock.When(client.Check(mock.Any[*User](), mock.Any[CheckConfig]())).ThenReturn(true, nil)
+			mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+				ThenReturn(true, nil)
 
 			tokenValidator := mock.Mock[TokenValidator]()
 
@@ -57,7 +60,7 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 			next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 				return res, nil
 			})
-			interceptor := NewPermitInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+			interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
 			result, err := interceptor(next)(ctx, req)
 			Expect(err).To(BeNil())
 			Expect(result).To(Equal(res))
@@ -66,10 +69,12 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 		It("should invoke the next handler when the enabled is false", func(ctx SpecContext) {
 			mock.SetUp(GinkgoT())
 			client := mock.Mock[CheckClient]()
-			mock.When(client.Check(mock.Any[*User](), mock.Any[CheckConfig]())).ThenReturn(false, nil)
+			mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+				ThenReturn(false, nil)
 
 			tokenValidator := mock.Mock[TokenValidator]()
-			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).ThenReturn(claims, nil)
+			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
+				ThenReturn(claims, nil)
 
 			req := mock.Mock[connect.AnyRequest]()
 			mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{
@@ -79,7 +84,7 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 			next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 				return res, nil
 			})
-			interceptor := NewPermitInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, func() bool {
+			interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, func() bool {
 				return false
 			})
 			result, err := interceptor(next)(ctx, req)
@@ -90,10 +95,12 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 		It("should return a permission denied error when the check returns false", func(ctx SpecContext) {
 			mock.SetUp(GinkgoT())
 			client := mock.Mock[CheckClient]()
-			mock.When(client.Check(mock.Any[*User](), mock.Any[CheckConfig]())).ThenReturn(false, nil)
+			mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+				ThenReturn(false, nil)
 
 			tokenValidator := mock.Mock[TokenValidator]()
-			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).ThenReturn(claims, nil)
+			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
+				ThenReturn(claims, nil)
 
 			req := mock.Mock[connect.AnyRequest]()
 			mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
@@ -101,7 +108,7 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 			next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 				return res, nil
 			})
-			interceptor := NewPermitInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+			interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
 			result, err := interceptor(next)(ctx, req)
 			Expect(err.Error()).To(Equal("permission_denied: permission denied"))
 			Expect(result).To(BeNil())
@@ -110,14 +117,16 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 		It("should return a permission denied error when the request is unauthenticated", func(ctx SpecContext) {
 			mock.SetUp(GinkgoT())
 			client := mock.Mock[CheckClient]()
-			mock.When(client.Check(mock.Any[*User](), mock.Any[CheckConfig]())).ThenReturn(false, nil)
+			mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+				ThenReturn(false, nil)
 
 			extractor := func(req connect.AnyRequest) (string, error) {
 				return "", fmt.Errorf("unauthenticated")
 			}
 
 			tokenValidator := mock.Mock[TokenValidator]()
-			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).ThenReturn(claims, nil)
+			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
+				ThenReturn(claims, nil)
 
 			req := mock.Mock[connect.AnyRequest]()
 			mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
@@ -125,7 +134,7 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 			next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 				return res, nil
 			})
-			interceptor := NewPermitInterceptor(client, extractor, tokenValidator, claimsMapper, alwaysEnabled)
+			interceptor := NewPermifyInterceptor(client, extractor, tokenValidator, claimsMapper, alwaysEnabled)
 			result, err := interceptor(next)(ctx, req)
 			Expect(err.Error()).To(Equal("permission_denied: permission denied"))
 			Expect(result).To(BeNil())
@@ -134,10 +143,12 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 		It("should return the error when the check call fails", func(ctx SpecContext) {
 			mock.SetUp(GinkgoT())
 			client := mock.Mock[CheckClient]()
-			mock.When(client.Check(mock.Any[*User](), mock.Any[CheckConfig]())).ThenReturn(false, fmt.Errorf("unknown error"))
+			mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+				ThenReturn(false, fmt.Errorf("unknown error"))
 
 			tokenValidator := mock.Mock[TokenValidator]()
-			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).ThenReturn(claims, nil)
+			mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
+				ThenReturn(claims, nil)
 
 			req := mock.Mock[connect.AnyRequest]()
 			mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
@@ -145,7 +156,7 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 			next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 				return res, nil
 			})
-			interceptor := NewPermitInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+			interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
 			result, err := interceptor(next)(ctx, req)
 			Expect(err.Error()).To(Equal("unknown error"))
 			Expect(result).To(BeNil())
@@ -156,7 +167,8 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 		It("should return a permission denied error", func(ctx SpecContext) {
 			mock.SetUp(GinkgoT())
 			client := mock.Mock[CheckClient]()
-			mock.When(client.Check(mock.Any[*User](), mock.Any[CheckConfig]())).ThenReturn(true, nil)
+			mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+				ThenReturn(true, nil)
 
 			tokenValidator := mock.Mock[TokenValidator]()
 
@@ -166,7 +178,7 @@ var _ = Describe("Authorizing a ConnectRPC request", func() {
 			next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 				return res, nil
 			})
-			interceptor := NewPermitInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+			interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
 			result, err := interceptor(next)(ctx, req)
 			Expect(err.Error()).To(Equal("permission_denied: permission denied"))
 			Expect(result).To(BeNil())

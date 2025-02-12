@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-func NewPermitInterceptor(
+func NewPermifyInterceptor(
 	client CheckClient,
 	tokenExtractor TokenExtractor,
 	tokenAuthenticator TokenValidator,
@@ -34,12 +34,12 @@ func NewPermitInterceptor(
 					return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 				}
 
-				user, err := claimsMapper(claims)
+				principal, attributes, err := claimsMapper(claims)
 				if err != nil {
 					return nil, err
 				}
 
-				result, err := client.Check(user, checks)
+				result, err := client.Check(principal, attributes, checks)
 				if err != nil {
 					return nil, err
 				}

@@ -1,66 +1,68 @@
 package connectpermit
 
-import "github.com/permitio/permit-golang/pkg/enforcement"
+import (
+	permifypayload "buf.build/gen/go/permifyco/permify/protocolbuffers/go/base/v1"
+	"google.golang.org/protobuf/types/known/structpb"
+)
 
 type CheckType string
 
 const (
 	SINGLE CheckType = "single"
-	BULK             = "bulk"
 	PUBLIC           = "public"
-)
-
-type BulkCheckMode string
-
-const (
-	AllOf = "all_of"
-	AnyOf = "any_of"
 )
 
 type Attributes map[string]any
 
-type User struct {
-	Key        string
-	Attributes Attributes
-}
-
 type Resource struct {
-	Type       string
-	Key        string
-	Tenant     string
-	Attributes Attributes
+	Type string
+	ID   string
 }
 
 type Check struct {
-	Action   string
-	Resource Resource
+	TenantID   string
+	Permission string
+	Entity     *Resource
 }
 
-func (c Check) toCheckRequest(user *User) enforcement.CheckRequest {
-	permitUser := enforcement.UserBuilder(user.Key).
-		WithAttributes(user.Attributes).
-		Build()
-
-	key := "*"
-	if c.Resource.Key != "" {
-		key = c.Resource.Key
+func (c Check) toCheckRequest(principal *Resource, attributes Attributes) (*permifypayload.PermissionCheckRequest, error) {
+	tenantId := "t1"
+	if c.TenantID != "" {
+		tenantId = c.TenantID
 	}
 
-	return enforcement.CheckRequest{
-		User:   permitUser,
-		Action: enforcement.Action(c.Action),
-		Resource: enforcement.Resource{
-			Type:       c.Resource.Type,
-			Key:        key,
-			Tenant:     c.Resource.Tenant,
-			Attributes: c.Resource.Attributes,
-		},
+	subject := &permifypayload.Subject{
+		Type: principal.Type,
+		Id:   principal.ID,
 	}
+
+	entity := &permifypayload.Entity{
+		Type: c.Entity.Type,
+		Id:   c.Entity.ID,
+	}
+
+	req := &permifypayload.PermissionCheckRequest{
+		TenantId:   tenantId,
+		Subject:    subject,
+		Permission: c.Permission,
+		Entity:     entity,
+	}
+
+	if attributes != nil {
+		data, err := structpb.NewStruct(attributes)
+		if err != nil {
+			return nil, err
+		}
+		req.Context = &permifypayload.Context{
+			Data: data,
+		}
+	}
+
+	return req, nil
 }
 
 type CheckConfig struct {
 	Type   CheckType
-	Mode   BulkCheckMode
 	Checks []Check
 }
 
