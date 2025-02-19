@@ -1,4 +1,4 @@
-package connectpermit
+package connectpermify
 
 import (
 	"fmt"

@@ -1,21 +1,16 @@
-package connectpermit
+package connectpermify
 
 import (
 	permifypayload "buf.build/gen/go/permifyco/permify/protocolbuffers/go/base/v1"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/ovechkin-dm/mockio/mock"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-var _ = Describe("Check", func() {
+func TestCheck(t *testing.T) {
 	const PERMISSION = "edit"
 
 	var (
-		stubPrincipal *Resource
-		stubResource  *Resource
-	)
-
-	BeforeEach(func() {
 		stubPrincipal = &Resource{
 			ID: "1234",
 		}
@@ -23,53 +18,48 @@ var _ = Describe("Check", func() {
 			Type: "widget",
 			ID:   "abcde",
 		}
-	})
+	)
 
-	When("config type is single", func() {
-		It("should invoke Check", func(ctx SpecContext) {
-			mock.SetUp(GinkgoT())
-			permitClient := mock.Mock[PermifyInterface]()
-			mock.When(permitClient.Check(mock.Any[*permifypayload.PermissionCheckRequest]())).
-				ThenReturn(true, nil)
+	t.Run("invokes Check when config type is single", func(t *testing.T) {
+		mock.SetUp(t)
+		permitClient := mock.Mock[PermifyInterface]()
+		mock.When(permitClient.Check(mock.Any[*permifypayload.PermissionCheckRequest]())).
+			ThenReturn(true, nil)
 
-			checkClient := NewCheckClient(permitClient)
-			result, err := checkClient.Check(stubPrincipal, Attributes{}, CheckConfig{
-				Type: SINGLE,
-				Checks: []Check{
-					{
-						Permission: PERMISSION,
-						Entity:     stubResource,
-					},
+		checkClient := NewCheckClient(permitClient)
+		result, err := checkClient.Check(stubPrincipal, Attributes{}, CheckConfig{
+			Type: SINGLE,
+			Checks: []Check{
+				{
+					Permission: PERMISSION,
+					Entity:     stubResource,
 				},
-			})
-
-			Expect(err).To(BeNil())
-			Expect(result).To(BeTrue())
-
-			mock.Verify(permitClient, mock.Once()).Check(mock.Any[*permifypayload.PermissionCheckRequest]())
+			},
 		})
+
+		assert.NoError(t, err)
+		assert.True(t, result)
+		mock.Verify(permitClient, mock.Once()).Check(mock.Any[*permifypayload.PermissionCheckRequest]())
 	})
 
-	When("config type is public", func() {
-		It("should return an error", func(ctx SpecContext) {
-			mock.SetUp(GinkgoT())
-			permitClient := mock.Mock[PermifyInterface]()
+	t.Run("returns an error when config type is public", func(t *testing.T) {
+		mock.SetUp(t)
+		permitClient := mock.Mock[PermifyInterface]()
 
-			checkClient := NewCheckClient(permitClient)
-			result, err := checkClient.Check(stubPrincipal, Attributes{}, CheckConfig{
-				Type: PUBLIC,
-				Checks: []Check{
-					{
-						Permission: PERMISSION,
-						Entity:     stubResource,
-					},
+		checkClient := NewCheckClient(permitClient)
+		result, err := checkClient.Check(stubPrincipal, Attributes{}, CheckConfig{
+			Type: PUBLIC,
+			Checks: []Check{
+				{
+					Permission: PERMISSION,
+					Entity:     stubResource,
 				},
-			})
-
-			Expect(err.Error()).To(Equal("unexpected CheckType public"))
-			Expect(result).To(BeFalse())
-
-			mock.Verify(permitClient, mock.Never()).Check(mock.Any[*permifypayload.PermissionCheckRequest]())
+			},
 		})
+
+		assert.EqualError(t, err, "unexpected CheckType public")
+		assert.False(t, result)
+
+		mock.Verify(permitClient, mock.Never()).Check(mock.Any[*permifypayload.PermissionCheckRequest]())
 	})
-})
+}

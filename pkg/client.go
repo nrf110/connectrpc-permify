@@ -1,4 +1,4 @@
-package connectpermit
+package connectpermify
 
 import (
 	permifypayload "buf.build/gen/go/permifyco/permify/protocolbuffers/go/base/v1"

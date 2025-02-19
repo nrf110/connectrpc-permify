@@ -13,4 +13,4 @@ gen: clean update
 
 .PHONY: test
 test: gen
-	ginkgo ./...
+	go test -v ./pkg/

@@ -1,16 +1,13 @@
-package connectpermit
+package connectpermify
 
 import (
 	"github.com/auth0/go-jwt-middleware/v2/validator"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-var _ = Describe("DefaultClaimsMapper", func() {
-	var customClaims testCustomClaims
-	var claims *validator.ValidatedClaims
-
-	BeforeEach(func() {
+func TestDefaultClaimsMapper(t *testing.T) {
+	var (
 		customClaims = testCustomClaims{
 			Roles:          []string{"admin"},
 			OrganizationID: "acme",
@@ -19,21 +16,21 @@ var _ = Describe("DefaultClaimsMapper", func() {
 			RegisteredClaims: validator.RegisteredClaims{},
 			CustomClaims:     &customClaims,
 		}
-	})
+	)
 
-	It("should set the subject as the key", func(ctx SpecContext) {
+	t.Run("should set the subject as the key", func(t *testing.T) {
 		mapper := DefaultClaimsMapper(DefaultCustomClaimsMapper[*testCustomClaims]())
 		user, _, err := mapper(claims)
-		Expect(err).To(BeNil())
-		Expect(user.ID).To(Equal(claims.RegisteredClaims.Subject))
+		assert.NoError(t, err)
+		assert.Equal(t, claims.RegisteredClaims.Subject, user.ID)
 	})
 
-	It("should convert the custom claims to a map of attributes", func(ctx SpecContext) {
+	t.Run("should convert the custom claims to a map of attributes", func(t *testing.T) {
 		mapper := DefaultClaimsMapper(DefaultCustomClaimsMapper[*testCustomClaims]())
 		user, attributes, err := mapper(claims)
-		Expect(err).To(BeNil())
-		Expect(user.ID).To(Equal(claims.RegisteredClaims.Subject))
-		Expect(attributes).To(HaveKeyWithValue("Roles", []string{"admin"}))
-		Expect(attributes).To(HaveKeyWithValue("OrganizationID", "acme"))
+		assert.NoError(t, err)
+		assert.Equal(t, claims.RegisteredClaims.Subject, user.ID)
+		assert.Equal(t, attributes["Roles"], []string{"admin"})
+		assert.Equal(t, attributes["OrganizationID"], "acme")
 	})
-})
+}
