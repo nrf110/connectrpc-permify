@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package nrf110.permify.v1;
 
-import "google/protobuf/any.proto";
 import "google/protobuf/descriptor.proto";
 
 option go_package = "github.com/nrf110/connectrpc-permify/gen/nrf110/permify/v1;permifyv1";
@@ -18,6 +17,6 @@ extend google.protobuf.MessageOptions {
 }
 
 extend google.protobuf.MethodOptions {
-  string action = 3000;
+  string permission = 3000;
   optional bool public = 3001;
 }

@@ -2,10 +2,11 @@ package connectpermify
 
 import (
 	"context"
-	"github.com/auth0/go-jwt-middleware/v2/jwks"
-	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"net/url"
 	"time"
+
+	"github.com/auth0/go-jwt-middleware/v2/jwks"
+	"github.com/auth0/go-jwt-middleware/v2/validator"
 )
 
 type TokenValidator interface {
@@ -29,7 +30,7 @@ func NewOIDCTokenValidator(config OIDCConfig) (*OIDCTokenValidator, error) {
 		return nil, err
 	}
 	provider := jwks.NewCachingProvider(uri, 1*time.Hour)
-	v, err := validator.New(
+	v, _ := validator.New(
 		provider.KeyFunc,
 		config.SignatureAlgorithm,
 		config.TrustedIssuer,
