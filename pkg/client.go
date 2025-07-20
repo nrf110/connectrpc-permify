@@ -1,9 +1,9 @@
 package connectpermify
 
 import (
-	permifypayload "buf.build/gen/go/permifyco/permify/protocolbuffers/go/base/v1"
 	"fmt"
-	"github.com/permitio/permit-golang/pkg/enforcement"
+
+	permifypayload "buf.build/gen/go/permifyco/permify/protocolbuffers/go/base/v1"
 )
 
 type CheckClient interface {
@@ -12,8 +12,6 @@ type CheckClient interface {
 
 type PermifyInterface interface {
 	Check(request *permifypayload.PermissionCheckRequest) (bool, error)
-	FilterObjects(user enforcement.User, action enforcement.Action, context map[string]string, resources ...enforcement.ResourceI) ([]enforcement.ResourceI, error)
-	GetUserPermissions(user enforcement.User, tenants ...string) (enforcement.UserPermissions, error)
 }
 
 type permifyCheckClient struct {
