@@ -7,11 +7,6 @@ import "google/protobuf/descriptor.proto";
 
 option go_package = "github.com/nrf110/connectrpc-permify/gen/nrf110/permify/v1;permifyv1";
 
-enum BulkCheckMode {
-  all_of = 0;
-  any_of = 1;
-}
-
 extend google.protobuf.FieldOptions {
   optional bool resource_id = 3000;
   optional bool tenant_id = 3001;
@@ -25,5 +20,4 @@ extend google.protobuf.MessageOptions {
 extend google.protobuf.MethodOptions {
   string action = 3000;
   optional bool public = 3001;
-  optional BulkCheckMode bulk_check_mode = 3002;
 }

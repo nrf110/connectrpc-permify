@@ -1,15 +1,16 @@
 package connectpermify
 
 import (
-	"connectrpc.com/connect"
 	"context"
 	"errors"
+
+	"connectrpc.com/connect"
 )
 
 func NewPermifyInterceptor(
 	client CheckClient,
 	tokenExtractor TokenExtractor,
-	tokenAuthenticator TokenValidator,
+	tokenValidator TokenValidator,
 	claimsMapper ClaimsMapper,
 	enabled func() bool,
 ) connect.UnaryInterceptorFunc {
@@ -29,7 +30,7 @@ func NewPermifyInterceptor(
 					return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 				}
 
-				claims, err := tokenAuthenticator.Validate(ctx, token)
+				claims, err := tokenValidator.Validate(ctx, token)
 				if err != nil {
 					return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 				}

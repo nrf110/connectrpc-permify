@@ -9,7 +9,7 @@ type CheckType string
 
 const (
 	SINGLE CheckType = "single"
-	PUBLIC           = "public"
+	PUBLIC CheckType = "public"
 )
 
 type Attributes map[string]any
