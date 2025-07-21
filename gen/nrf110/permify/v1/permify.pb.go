@@ -10,7 +10,6 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
-	_ "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -59,8 +58,8 @@ var file_nrf110_permify_v1_permify_proto_extTypes = []protoimpl.ExtensionInfo{
 		ExtendedType:  (*descriptorpb.MethodOptions)(nil),
 		ExtensionType: (*string)(nil),
 		Field:         3000,
-		Name:          "nrf110.permify.v1.action",
-		Tag:           "bytes,3000,opt,name=action",
+		Name:          "nrf110.permify.v1.permission",
+		Tag:           "bytes,3000,opt,name=permission",
 		Filename:      "nrf110/permify/v1/permify.proto",
 	},
 	{
@@ -91,8 +90,8 @@ var (
 
 // Extension fields to descriptorpb.MethodOptions.
 var (
-	// optional string action = 3000;
-	E_Action = &file_nrf110_permify_v1_permify_proto_extTypes[4]
+	// optional string permission = 3000;
+	E_Permission = &file_nrf110_permify_v1_permify_proto_extTypes[4]
 	// optional bool public = 3001;
 	E_Public = &file_nrf110_permify_v1_permify_proto_extTypes[5]
 )
@@ -101,13 +100,15 @@ var File_nrf110_permify_v1_permify_proto protoreflect.FileDescriptor
 
 const file_nrf110_permify_v1_permify_proto_rawDesc = "" +
 	"\n" +
-	"\x1fnrf110/permify/v1/permify.proto\x12\x11nrf110.permify.v1\x1a\x19google/protobuf/any.proto\x1a google/protobuf/descriptor.proto:B\n" +
+	"\x1fnrf110/permify/v1/permify.proto\x12\x11nrf110.permify.v1\x1a google/protobuf/descriptor.proto:B\n" +
 	"\vresource_id\x12\x1d.google.protobuf.FieldOptions\x18\xb8\x17 \x01(\bR\n" +
 	"resourceId\x88\x01\x01:>\n" +
 	"\ttenant_id\x12\x1d.google.protobuf.FieldOptions\x18\xb9\x17 \x01(\bR\btenantId\x88\x01\x01:H\n" +
 	"\x0eattribute_name\x12\x1d.google.protobuf.FieldOptions\x18\xba\x17 \x01(\tR\rattributeName\x88\x01\x01:E\n" +
-	"\rresource_type\x12\x1f.google.protobuf.MessageOptions\x18\xb8\x17 \x01(\tR\fresourceType:7\n" +
-	"\x06action\x12\x1e.google.protobuf.MethodOptions\x18\xb8\x17 \x01(\tR\x06action::\n" +
+	"\rresource_type\x12\x1f.google.protobuf.MessageOptions\x18\xb8\x17 \x01(\tR\fresourceType:?\n" +
+	"\n" +
+	"permission\x12\x1e.google.protobuf.MethodOptions\x18\xb8\x17 \x01(\tR\n" +
+	"permission::\n" +
 	"\x06public\x12\x1e.google.protobuf.MethodOptions\x18\xb9\x17 \x01(\bR\x06public\x88\x01\x01B\xd1\x01\n" +
 	"\x15com.nrf110.permify.v1B\fPermifyProtoP\x01ZDgithub.com/nrf110/connectrpc-permify/gen/nrf110/permify/v1;permifyv1\xa2\x02\x03NPX\xaa\x02\x11Nrf110.Permify.V1\xca\x02\x11Nrf110\\Permify\\V1\xe2\x02\x1dNrf110\\Permify\\V1\\GPBMetadata\xea\x02\x13Nrf110::Permify::V1b\x06proto3"
 
@@ -121,7 +122,7 @@ var file_nrf110_permify_v1_permify_proto_depIdxs = []int32{
 	0, // 1: nrf110.permify.v1.tenant_id:extendee -> google.protobuf.FieldOptions
 	0, // 2: nrf110.permify.v1.attribute_name:extendee -> google.protobuf.FieldOptions
 	1, // 3: nrf110.permify.v1.resource_type:extendee -> google.protobuf.MessageOptions
-	2, // 4: nrf110.permify.v1.action:extendee -> google.protobuf.MethodOptions
+	2, // 4: nrf110.permify.v1.permission:extendee -> google.protobuf.MethodOptions
 	2, // 5: nrf110.permify.v1.public:extendee -> google.protobuf.MethodOptions
 	6, // [6:6] is the sub-list for method output_type
 	6, // [6:6] is the sub-list for method input_type
