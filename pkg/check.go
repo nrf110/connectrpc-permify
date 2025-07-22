@@ -15,8 +15,9 @@ const (
 type Attributes map[string]any
 
 type Resource struct {
-	Type string
-	ID   string
+	Type       string
+	ID         string
+	Attributes Attributes
 }
 
 type Check struct {
@@ -48,8 +49,15 @@ func (c Check) toCheckRequest(principal *Resource, attributes Attributes) (*perm
 		Entity:     entity,
 	}
 
-	if attributes != nil {
-		data, err := structpb.NewStruct(attributes)
+	mergedAttributes := make(Attributes)
+	for k, v := range attributes {
+		mergedAttributes[k] = v
+	}
+	for k, v := range c.Entity.Attributes {
+		mergedAttributes[k] = v
+	}
+	if len(mergedAttributes) > 0 {
+		data, err := structpb.NewStruct(mergedAttributes)
 		if err != nil {
 			return nil, err
 		}
