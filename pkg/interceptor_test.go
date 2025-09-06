@@ -2,22 +2,16 @@ package connectpermify
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"connectrpc.com/connect"
-	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/ovechkin-dm/mockio/mock"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInterceptor_Checkable(t *testing.T) {
-	claims := &validator.ValidatedClaims{
-		RegisteredClaims: validator.RegisteredClaims{
-			Subject: "abcde",
-		},
-	}
-
 	t.Run("invokes the next handler when the check call returns true", func(t *testing.T) {
 		mock.SetUp(t)
 		ctx := context.Background()
@@ -25,17 +19,26 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(true, nil)
 
-		tokenValidator := mock.Mock[TokenValidator]()
-		mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
-			ThenReturn(claims, nil)
-
 		req := mock.Mock[connect.AnyRequest]()
 		mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
 		res := mock.Mock[connect.AnyResponse]()
 		next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			return res, nil
 		})
-		interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+
+		authenticator := mock.Mock[Authenticator]()
+		mock.When(authenticator.Authenticate(mock.AnyContext(), mock.Any[connect.AnyRequest]())).ThenReturn(
+			&AuthenticationResult{
+				Principal: &Resource{
+					ID:   "1234",
+					Type: "User",
+				},
+				Attributes: Attributes{},
+			},
+			nil,
+		)
+
+		interceptor := NewPermifyInterceptor(client, authenticator, alwaysEnabled)
 		result, err := interceptor(next)(ctx, req)
 
 		assert.NoError(t, err)
@@ -49,8 +52,6 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(true, nil)
 
-		tokenValidator := mock.Mock[TokenValidator]()
-
 		req := mock.Mock[connect.AnyRequest]()
 		mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{
 			IsPublic: true,
@@ -59,7 +60,10 @@ func TestInterceptor_Checkable(t *testing.T) {
 		next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			return res, nil
 		})
-		interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+
+		authenticator := mock.Mock[Authenticator]()
+
+		interceptor := NewPermifyInterceptor(client, authenticator, alwaysEnabled)
 		result, err := interceptor(next)(ctx, req)
 		assert.NoError(t, err)
 		assert.Equal(t, res, result)
@@ -72,17 +76,16 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(false, nil)
 
-		tokenValidator := mock.Mock[TokenValidator]()
-		mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
-			ThenReturn(claims, nil)
-
 		req := mock.Mock[connect.AnyRequest]()
 		mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
 		res := mock.Mock[connect.AnyResponse]()
 		next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			return res, nil
 		})
-		interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, func() bool {
+
+		authenticator := mock.Mock[Authenticator]()
+
+		interceptor := NewPermifyInterceptor(client, authenticator, func() bool {
 			return false
 		})
 		result, err := interceptor(next)(ctx, req)
@@ -97,17 +100,26 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(false, nil)
 
-		tokenValidator := mock.Mock[TokenValidator]()
-		mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
-			ThenReturn(claims, nil)
-
 		req := mock.Mock[connect.AnyRequest]()
 		mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
 		res := mock.Mock[connect.AnyResponse]()
 		next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			return res, nil
 		})
-		interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+
+		authenticator := mock.Mock[Authenticator]()
+		mock.When(authenticator.Authenticate(mock.AnyContext(), mock.Any[connect.AnyRequest]())).ThenReturn(
+			&AuthenticationResult{
+				Principal: &Resource{
+					ID:   "1234",
+					Type: "User",
+				},
+				Attributes: Attributes{},
+			},
+			nil,
+		)
+
+		interceptor := NewPermifyInterceptor(client, authenticator, alwaysEnabled)
 		result, err := interceptor(next)(ctx, req)
 		assert.ErrorContains(t, err, "permission_denied: permission denied")
 		assert.Nil(t, result)
@@ -117,16 +129,6 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.SetUp(t)
 		ctx := context.Background()
 		client := mock.Mock[CheckClient]()
-		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
-			ThenReturn(false, nil)
-
-		extractor := func(req connect.AnyRequest) (string, error) {
-			return "", fmt.Errorf("unauthenticated")
-		}
-
-		tokenValidator := mock.Mock[TokenValidator]()
-		mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
-			ThenReturn(claims, nil)
 
 		req := mock.Mock[connect.AnyRequest]()
 		mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
@@ -134,7 +136,14 @@ func TestInterceptor_Checkable(t *testing.T) {
 		next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			return res, nil
 		})
-		interceptor := NewPermifyInterceptor(client, extractor, tokenValidator, claimsMapper, alwaysEnabled)
+
+		authenticator := mock.Mock[Authenticator]()
+		mock.When(authenticator.Authenticate(mock.AnyContext(), mock.Any[connect.AnyRequest]())).ThenReturn(
+			nil,
+			connect.NewError(connect.CodePermissionDenied, errors.New("permission denied")),
+		)
+
+		interceptor := NewPermifyInterceptor(client, authenticator, alwaysEnabled)
 		result, err := interceptor(next)(ctx, req)
 		assert.ErrorContains(t, err, "permission_denied: permission denied")
 		assert.Nil(t, result)
@@ -148,17 +157,26 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(false, expectedErr)
 
-		tokenValidator := mock.Mock[TokenValidator]()
-		mock.When(tokenValidator.Validate(mock.AnyContext(), mock.AnyString())).
-			ThenReturn(claims, nil)
-
 		req := mock.Mock[connect.AnyRequest]()
 		mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
 		res := mock.Mock[connect.AnyResponse]()
 		next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			return res, nil
 		})
-		interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+
+		authenticator := mock.Mock[Authenticator]()
+		mock.When(authenticator.Authenticate(mock.AnyContext(), mock.Any[connect.AnyRequest]())).ThenReturn(
+			&AuthenticationResult{
+				Principal: &Resource{
+					ID:   "1234",
+					Type: "User",
+				},
+				Attributes: Attributes{},
+			},
+			nil,
+		)
+
+		interceptor := NewPermifyInterceptor(client, authenticator, alwaysEnabled)
 		result, err := interceptor(next)(ctx, req)
 
 		assert.ErrorIs(t, err, expectedErr)
@@ -174,15 +192,16 @@ func TestInterceptor_NotCheckable(t *testing.T) {
 		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(true, nil)
 
-		tokenValidator := mock.Mock[TokenValidator]()
-
 		req := mock.Mock[connect.AnyRequest]()
 		mock.When(req.Any()).ThenReturn("")
 		res := mock.Mock[connect.AnyResponse]()
 		next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			return res, nil
 		})
-		interceptor := NewPermifyInterceptor(client, tokenExtractor, tokenValidator, claimsMapper, alwaysEnabled)
+
+		authenticator := mock.Mock[Authenticator]()
+
+		interceptor := NewPermifyInterceptor(client, authenticator, alwaysEnabled)
 		result, err := interceptor(next)(ctx, req)
 		assert.ErrorContains(t, err, "permission_denied: permission denied")
 		assert.Nil(t, result)

@@ -2,6 +2,7 @@ package connectpermify
 
 import (
 	"fmt"
+
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-viper/mapstructure/v2"
 )

@@ -9,9 +9,7 @@ import (
 
 func NewPermifyInterceptor(
 	client CheckClient,
-	tokenExtractor TokenExtractor,
-	tokenValidator TokenValidator,
-	claimsMapper ClaimsMapper,
+	authenticator Authenticator,
 	enabled func() bool,
 ) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
@@ -25,22 +23,12 @@ func NewPermifyInterceptor(
 			}
 			checks := checkable.GetChecks()
 			if enabled() && !checks.IsPublic {
-				token, err := tokenExtractor(req)
-				if err != nil {
-					return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
-				}
-
-				claims, err := tokenValidator.Validate(ctx, token)
-				if err != nil {
-					return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
-				}
-
-				principal, attributes, err := claimsMapper(claims)
+				authnResult, err := authenticator.Authenticate(ctx, req)
 				if err != nil {
 					return nil, err
 				}
 
-				result, err := client.Check(ctx, principal, attributes, checks)
+				result, err := client.Check(ctx, authnResult.Principal, authnResult.Attributes, checks)
 				if err != nil {
 					return nil, err
 				}
