@@ -5,13 +5,6 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-type CheckType string
-
-const (
-	SINGLE CheckType = "single"
-	PUBLIC CheckType = "public"
-)
-
 type Attributes map[string]any
 
 type Resource struct {
@@ -70,12 +63,8 @@ func (c Check) toCheckRequest(principal *Resource, attributes Attributes) (*perm
 }
 
 type CheckConfig struct {
-	Type   CheckType
-	Checks []Check
-}
-
-func (config CheckConfig) IsPublic() bool {
-	return config.Type == PUBLIC
+	IsPublic bool
+	Checks   []Check
 }
 
 type Checkable interface {

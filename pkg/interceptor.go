@@ -24,7 +24,7 @@ func NewPermifyInterceptor(
 				return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 			}
 			checks := checkable.GetChecks()
-			if enabled() && !checks.IsPublic() {
+			if enabled() && !checks.IsPublic {
 				token, err := tokenExtractor(req)
 				if err != nil {
 					return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
@@ -40,7 +40,7 @@ func NewPermifyInterceptor(
 					return nil, err
 				}
 
-				result, err := client.Check(principal, attributes, checks)
+				result, err := client.Check(ctx, principal, attributes, checks)
 				if err != nil {
 					return nil, err
 				}

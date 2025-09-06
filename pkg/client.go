@@ -1,13 +1,13 @@
 package connectpermify
 
 import (
-	"fmt"
+	"context"
 
 	permifypayload "buf.build/gen/go/permifyco/permify/protocolbuffers/go/base/v1"
 )
 
 type CheckClient interface {
-	Check(principal *Resource, attributes Attributes, config CheckConfig) (bool, error)
+	Check(ctx context.Context, principal *Resource, attributes Attributes, config CheckConfig) (bool, error)
 }
 
 type PermifyInterface interface {
@@ -24,17 +24,26 @@ func NewCheckClient(client PermifyInterface) CheckClient {
 	}
 }
 
-func (client *permifyCheckClient) Check(principal *Resource, attributes Attributes, config CheckConfig) (bool, error) {
-	switch config.Type {
-	case SINGLE:
-		return client.check(principal, attributes, config)
-	default:
-		return false, fmt.Errorf("unexpected CheckType %s", config.Type)
+func (client *permifyCheckClient) Check(ctx context.Context, principal *Resource, attributes Attributes, config CheckConfig) (bool, error) {
+	// TODO: parallize this until the permify client supports a native bulk operation
+	results := make([]bool, len(config.Checks))
+	for idx, check := range config.Checks {
+		result, err := client.check(principal, attributes, check)
+		if err != nil {
+			return false, err
+		}
+		results[idx] = result
 	}
+
+	result := true
+	for _, r := range results {
+		result = result && r
+	}
+	return result, nil
 }
 
-func (client *permifyCheckClient) check(principal *Resource, attributes Attributes, config CheckConfig) (bool, error) {
-	request, err := config.Checks[0].toCheckRequest(principal, attributes)
+func (client *permifyCheckClient) check(principal *Resource, attributes Attributes, check Check) (bool, error) {
+	request, err := check.toCheckRequest(principal, attributes)
 	if err != nil {
 		return false, err
 	}

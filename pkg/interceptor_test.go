@@ -1,13 +1,14 @@
 package connectpermify
 
 import (
-	"connectrpc.com/connect"
 	"context"
 	"fmt"
+	"testing"
+
+	"connectrpc.com/connect"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/ovechkin-dm/mockio/mock"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestInterceptor_Checkable(t *testing.T) {
@@ -21,7 +22,7 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.SetUp(t)
 		ctx := context.Background()
 		client := mock.Mock[CheckClient]()
-		mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(true, nil)
 
 		tokenValidator := mock.Mock[TokenValidator]()
@@ -45,14 +46,14 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.SetUp(t)
 		ctx := context.Background()
 		client := mock.Mock[CheckClient]()
-		mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(true, nil)
 
 		tokenValidator := mock.Mock[TokenValidator]()
 
 		req := mock.Mock[connect.AnyRequest]()
 		mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{
-			Type: PUBLIC,
+			IsPublic: true,
 		}})
 		res := mock.Mock[connect.AnyResponse]()
 		next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
@@ -68,7 +69,7 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.SetUp(t)
 		ctx := context.Background()
 		client := mock.Mock[CheckClient]()
-		mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(false, nil)
 
 		tokenValidator := mock.Mock[TokenValidator]()
@@ -76,9 +77,7 @@ func TestInterceptor_Checkable(t *testing.T) {
 			ThenReturn(claims, nil)
 
 		req := mock.Mock[connect.AnyRequest]()
-		mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{
-			Type: SINGLE,
-		}})
+		mock.When(req.Any()).ThenReturn(&stubCheckable{checks: CheckConfig{}})
 		res := mock.Mock[connect.AnyResponse]()
 		next := connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 			return res, nil
@@ -95,7 +94,7 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.SetUp(t)
 		ctx := context.Background()
 		client := mock.Mock[CheckClient]()
-		mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(false, nil)
 
 		tokenValidator := mock.Mock[TokenValidator]()
@@ -118,7 +117,7 @@ func TestInterceptor_Checkable(t *testing.T) {
 		mock.SetUp(t)
 		ctx := context.Background()
 		client := mock.Mock[CheckClient]()
-		mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(false, nil)
 
 		extractor := func(req connect.AnyRequest) (string, error) {
@@ -146,7 +145,7 @@ func TestInterceptor_Checkable(t *testing.T) {
 		ctx := context.Background()
 		client := mock.Mock[CheckClient]()
 		expectedErr := fmt.Errorf("unknown error")
-		mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(false, expectedErr)
 
 		tokenValidator := mock.Mock[TokenValidator]()
@@ -172,7 +171,7 @@ func TestInterceptor_NotCheckable(t *testing.T) {
 		mock.SetUp(t)
 		ctx := context.Background()
 		client := mock.Mock[CheckClient]()
-		mock.When(client.Check(mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
+		mock.When(client.Check(mock.AnyContext(), mock.Any[*Resource](), mock.Any[Attributes](), mock.Any[CheckConfig]())).
 			ThenReturn(true, nil)
 
 		tokenValidator := mock.Mock[TokenValidator]()
