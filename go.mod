@@ -1,6 +1,6 @@
 module github.com/nrf110/connectrpc-permify
 
-go 1.24.0
+go 1.25.0
 
 require (
 	buf.build/gen/go/permifyco/permify/protocolbuffers/go v1.36.8-20250821104952-d45a0df11d45.1
