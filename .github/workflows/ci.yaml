@@ -20,7 +20,7 @@ jobs:
           input: github-actions
           against: https://github.com/nrf110/connectrpc-permify.git#branch=main,ref=HEAD~1
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: stable
       - name: Test
