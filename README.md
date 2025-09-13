@@ -8,8 +8,7 @@ This interceptor validates JWT tokens and performs permission checks against Per
 
 ## Features
 
-- **JWT Token Validation**: OIDC-compliant token validation with configurable issuers and audiences
-- **Automatic Claims Mapping**: Maps JWT claims to Permify resources and attributes
+- **Pluggable Authentication**: Implement the Authenticator interface to provide a security principal to authorize against
 - **Protocol Buffer Extensions**: Annotate your protobuf definitions to automatically configure permissions
 - **Flexible Authorization**: Support for public endpoints and disabled authorization modes
 - **ConnectRPC Integration**: Seamlessly integrates as a ConnectRPC interceptor
@@ -67,37 +66,15 @@ func main() {
         "http://localhost:3476", // Permify server URL
     )
 
-    // Set up token validation
-    tokenValidator := connectpermify.NewOIDCTokenValidator(OIDCConfig{
-        TrustedIssuer: "https://your-issuer.com",  // OIDC issuer
-        Audiences: []string{"your-audience"},  // Expected audiences
-    })
-
-    // Configure claims mapping
-    claimsMapper := connectpermify.NewClaimsMapper[map[string]interface{}](
-        func(claims map[string]interface{}) (*connectpermify.Resource, connectpermify.Attributes, error) {
-            // Map JWT claims to Permify principal and attributes
-            principal := &connectpermify.Resource{
-                Type: "user",
-                ID:   claims["sub"].(string),
-            }
-
-            attributes := connectpermify.Attributes{
-                "email": claims["email"],
-                "role":  claims["role"],
-            }
-
-            return principal, attributes, nil
-        },
-    )
+    // An Authenticator defines the logic for finding credentials in the request, verifying them, and returning the Principal
+    // NewCustomAuthenticator isn't a real method.  Separate libraries defining Authenticator implementations are available.
+    authenticator := NewCustomAuthenticator()
 
     // Create the interceptor
     interceptor := connectpermify.NewPermifyInterceptor(
         connectpermify.NewCheckClient(permify),
-        connectpermify.DefaultTokenExtractor,  // Extracts Bearer token
-        tokenValidator,
-        claimsMapper,
-        func() bool { return true }, // Enable/disable authorization
+        authenticator,
+        func() bool { return true }, // Enable/disable authorization.  Useful for testing locally without checks, or while migrating from another authorization solution.
     )
 
     // Use with your ConnectRPC server
@@ -118,7 +95,6 @@ Your request messages must implement the `Checkable` interface:
 // Usually auto-generated from protobuf annotations
 func (r *GetUserRequest) GetChecks() connectpermify.CheckConfig {
     return connectpermify.CheckConfig{
-        Type: connectpermify.SINGLE,
         Checks: []connectpermify.Check{
             {
                 TenantID:   r.GetTenantId(), // If using multi-tenancy
