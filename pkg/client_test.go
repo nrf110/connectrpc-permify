@@ -24,8 +24,10 @@ func TestCheck(t *testing.T) {
 	t.Run("invokes Check when not public", func(t *testing.T) {
 		mock.SetUp(t)
 		permifyClient := mock.Mock[PermifyInterface]()
-		mock.When(permifyClient.Check(mock.Any[*permifypayload.PermissionCheckRequest]())).
-			ThenReturn(true, nil)
+		mock.When(permifyClient.Check(mock.AnyContext(), mock.Any[*permifypayload.PermissionCheckRequest]())).
+			ThenReturn(&permifypayload.PermissionCheckResponse{
+				Can: permifypayload.CheckResult_CHECK_RESULT_ALLOWED,
+			}, nil)
 
 		checkClient := NewCheckClient(permifyClient)
 		result, err := checkClient.Check(t.Context(), stubPrincipal, Attributes{}, CheckConfig{
@@ -39,6 +41,6 @@ func TestCheck(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.True(t, result)
-		mock.Verify(permifyClient, mock.Once()).Check(mock.Any[*permifypayload.PermissionCheckRequest]())
+		mock.Verify(permifyClient, mock.Once()).Check(mock.AnyContext(), mock.Any[*permifypayload.PermissionCheckRequest]())
 	})
 }

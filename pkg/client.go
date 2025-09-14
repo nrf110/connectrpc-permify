@@ -4,6 +4,7 @@ import (
 	"context"
 
 	permifypayload "buf.build/gen/go/permifyco/permify/protocolbuffers/go/base/v1"
+	"google.golang.org/grpc"
 )
 
 type CheckClient interface {
@@ -11,7 +12,7 @@ type CheckClient interface {
 }
 
 type PermifyInterface interface {
-	Check(request *permifypayload.PermissionCheckRequest) (bool, error)
+	Check(ctx context.Context, request *permifypayload.PermissionCheckRequest, opts ...grpc.CallOption) (*permifypayload.PermissionCheckResponse, error)
 }
 
 type permifyCheckClient struct {
@@ -28,7 +29,7 @@ func (client *permifyCheckClient) Check(ctx context.Context, principal *Resource
 	// TODO: parallize this until the permify client supports a native bulk operation
 	results := make([]bool, len(config.Checks))
 	for idx, check := range config.Checks {
-		result, err := client.check(principal, attributes, check)
+		result, err := client.check(ctx, principal, attributes, check)
 		if err != nil {
 			return false, err
 		}
@@ -42,10 +43,15 @@ func (client *permifyCheckClient) Check(ctx context.Context, principal *Resource
 	return result, nil
 }
 
-func (client *permifyCheckClient) check(principal *Resource, attributes Attributes, check Check) (bool, error) {
+func (client *permifyCheckClient) check(ctx context.Context, principal *Resource, attributes Attributes, check Check) (bool, error) {
 	request, err := check.toCheckRequest(principal, attributes)
 	if err != nil {
 		return false, err
 	}
-	return client.Client.Check(request)
+	res, err := client.Client.Check(ctx, request)
+	if err != nil {
+		return false, err
+	}
+
+	return res.Can == permifypayload.CheckResult_CHECK_RESULT_ALLOWED, nil
 }
