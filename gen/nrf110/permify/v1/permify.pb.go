@@ -70,6 +70,14 @@ var file_nrf110_permify_v1_permify_proto_extTypes = []protoimpl.ExtensionInfo{
 		Tag:           "varint,3001,opt,name=public",
 		Filename:      "nrf110/permify/v1/permify.proto",
 	},
+	{
+		ExtendedType:  (*descriptorpb.MethodOptions)(nil),
+		ExtensionType: (*int32)(nil),
+		Field:         3002,
+		Name:          "nrf110.permify.v1.depth",
+		Tag:           "varint,3002,opt,name=depth",
+		Filename:      "nrf110/permify/v1/permify.proto",
+	},
 }
 
 // Extension fields to descriptorpb.FieldOptions.
@@ -94,6 +102,8 @@ var (
 	E_Permission = &file_nrf110_permify_v1_permify_proto_extTypes[4]
 	// optional bool public = 3001;
 	E_Public = &file_nrf110_permify_v1_permify_proto_extTypes[5]
+	// optional int32 depth = 3002;
+	E_Depth = &file_nrf110_permify_v1_permify_proto_extTypes[6]
 )
 
 var File_nrf110_permify_v1_permify_proto protoreflect.FileDescriptor
@@ -109,7 +119,8 @@ const file_nrf110_permify_v1_permify_proto_rawDesc = "" +
 	"\n" +
 	"permission\x12\x1e.google.protobuf.MethodOptions\x18\xb8\x17 \x01(\tR\n" +
 	"permission::\n" +
-	"\x06public\x12\x1e.google.protobuf.MethodOptions\x18\xb9\x17 \x01(\bR\x06public\x88\x01\x01B\xd1\x01\n" +
+	"\x06public\x12\x1e.google.protobuf.MethodOptions\x18\xb9\x17 \x01(\bR\x06public\x88\x01\x01:8\n" +
+	"\x05depth\x12\x1e.google.protobuf.MethodOptions\x18\xba\x17 \x01(\x05R\x05depth\x88\x01\x01B\xd1\x01\n" +
 	"\x15com.nrf110.permify.v1B\fPermifyProtoP\x01ZDgithub.com/nrf110/connectrpc-permify/gen/nrf110/permify/v1;permifyv1\xa2\x02\x03NPX\xaa\x02\x11Nrf110.Permify.V1\xca\x02\x11Nrf110\\Permify\\V1\xe2\x02\x1dNrf110\\Permify\\V1\\GPBMetadata\xea\x02\x13Nrf110::Permify::V1b\x06proto3"
 
 var file_nrf110_permify_v1_permify_proto_goTypes = []any{
@@ -124,10 +135,11 @@ var file_nrf110_permify_v1_permify_proto_depIdxs = []int32{
 	1, // 3: nrf110.permify.v1.resource_type:extendee -> google.protobuf.MessageOptions
 	2, // 4: nrf110.permify.v1.permission:extendee -> google.protobuf.MethodOptions
 	2, // 5: nrf110.permify.v1.public:extendee -> google.protobuf.MethodOptions
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	0, // [0:6] is the sub-list for extension extendee
+	2, // 6: nrf110.permify.v1.depth:extendee -> google.protobuf.MethodOptions
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	0, // [0:7] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
 }
 
@@ -143,7 +155,7 @@ func file_nrf110_permify_v1_permify_proto_init() {
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_nrf110_permify_v1_permify_proto_rawDesc), len(file_nrf110_permify_v1_permify_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   0,
-			NumExtensions: 6,
+			NumExtensions: 7,
 			NumServices:   0,
 		},
 		GoTypes:           file_nrf110_permify_v1_permify_proto_goTypes,

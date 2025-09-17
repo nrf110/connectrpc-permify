@@ -1,6 +1,8 @@
 package connectpermify
 
 import (
+	"context"
+
 	permifypayload "buf.build/gen/go/permifyco/permify/protocolbuffers/go/base/v1"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -17,9 +19,15 @@ type Check struct {
 	TenantID   string
 	Permission string
 	Entity     *Resource
+	Depth      *int32
 }
 
-func (c Check) toCheckRequest(principal *Resource, attributes Attributes) (*permifypayload.PermissionCheckRequest, error) {
+func (c Check) toCheckRequest(
+	ctx context.Context,
+	principal *Resource,
+	attributes Attributes,
+	schemaVersion string,
+) (*permifypayload.PermissionCheckRequest, error) {
 	tenantId := "t1"
 	if c.TenantID != "" {
 		tenantId = c.TenantID
@@ -40,6 +48,11 @@ func (c Check) toCheckRequest(principal *Resource, attributes Attributes) (*perm
 		Subject:    subject,
 		Permission: c.Permission,
 		Entity:     entity,
+		Metadata: &permifypayload.PermissionCheckRequestMetadata{
+			SchemaVersion: schemaVersion,
+			SnapToken:     GetSnapToken(ctx),
+			Depth:         *c.Depth,
+		},
 	}
 
 	mergedAttributes := make(Attributes)

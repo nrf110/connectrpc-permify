@@ -46,8 +46,7 @@
         "usernamehw.errorlens",
         "esbenp.prettier-vscode",
         "anthropic.claude-code",
-        "github.copilot",
-        "github.copilot-chat",
+        "augment.vscode-augment",
         "github.vscode-pull-request-github"
       ]
     },

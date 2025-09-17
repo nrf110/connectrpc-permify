@@ -19,4 +19,5 @@ extend google.protobuf.MessageOptions {
 extend google.protobuf.MethodOptions {
   string permission = 3000;
   optional bool public = 3001;
+  optional int32 depth = 3002;
 }

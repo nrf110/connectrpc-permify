@@ -41,6 +41,7 @@ message User {
 service UserService {
   rpc GetUser(GetUserRequest) returns (User) {
     option (nrf110.permify.v1.action) = "read";
+    option (nrf110.permify.v1.depth) = 2;  // Optional
   }
 
   rpc PublicHealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {
@@ -103,6 +104,7 @@ func (r *GetUserRequest) GetChecks() connectpermify.CheckConfig {
                     Type: "user",
                     ID:   r.GetUserId(),
                 },
+                Depth: int32(10),
             },
         },
     }
@@ -119,42 +121,20 @@ The library provides custom protobuf extensions for automatic permission configu
 - `(nrf110.permify.v1.resource_type) = "user"` - Set resource type for messages
 - `(nrf110.permify.v1.action) = "read"` - Set required permission for methods
 - `(nrf110.permify.v1.public) = true` - Mark methods as public (no auth required)
+- `(nrf110.permify.v1.depth) = true` - Set the depth parameter for the check request, in the event the graph of permissions gets into a loop
 
-## Configuration Options
-
-### Token Validation
-
-```go
-validator := connectpermify.NewTokenValidator(
-    "https://auth.example.com",           // OIDC issuer URL
-    []string{"api", "mobile-app"},        // Accepted audiences
-)
-```
-
-### Claims Mapping
-
-The library supports generic claims mapping for different JWT token formats:
+## Check Client Configuration
 
 ```go
-// For Auth0-style claims
-auth0Mapper := connectpermify.NewClaimsMapper[auth0.Claims](
-    func(claims auth0.Claims) (*connectpermify.Resource, connectpermify.Attributes, error) {
-        // Custom mapping logic
-    },
+checkClient := connectpermify.NewCheckClient(
+  permifyClient,
+
+  // Optional.  Defaults to 10
+  connectpermify.WithDefaultDepth(10),
+
+  // Optional.  Defaults to ""
+  connectpermify.WithSchemaVersion("latest"),
 )
-
-// For standard JWT claims
-standardMapper := connectpermify.NewClaimsMapper[map[string]interface{}](
-    func(claims map[string]interface{}) (*connectpermify.Resource, connectpermify.Attributes, error) {
-        // Custom mapping logic
-    },
-)
-```
-
-### Check Client Configuration
-
-```go
-checkClient := connectpermify.NewCheckClient(permifyClient)
 ```
 
 ## Development

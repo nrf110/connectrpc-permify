@@ -16,13 +16,36 @@ type PermifyInterface interface {
 }
 
 type permifyCheckClient struct {
-	Client PermifyInterface
+	schemaVersion string
+	defaultDepth  int32
+	client        PermifyInterface
 }
 
-func NewCheckClient(client PermifyInterface) CheckClient {
-	return &permifyCheckClient{
-		Client: client,
+type ClientOption func(*permifyCheckClient)
+
+func WithDefaultDepth(depth int32) ClientOption {
+	return func(client *permifyCheckClient) {
+		client.defaultDepth = depth
 	}
+}
+
+func WithSchemaVersion(version string) ClientOption {
+	return func(client *permifyCheckClient) {
+		client.schemaVersion = version
+	}
+}
+
+func NewCheckClient(client PermifyInterface, options ...ClientOption) CheckClient {
+	c := &permifyCheckClient{
+		client:       client,
+		defaultDepth: 10,
+	}
+
+	for _, opt := range options {
+		opt(c)
+	}
+
+	return c
 }
 
 func (client *permifyCheckClient) Check(ctx context.Context, principal *Resource, attributes Attributes, config CheckConfig) (bool, error) {
@@ -43,12 +66,20 @@ func (client *permifyCheckClient) Check(ctx context.Context, principal *Resource
 	return result, nil
 }
 
-func (client *permifyCheckClient) check(ctx context.Context, principal *Resource, attributes Attributes, check Check) (bool, error) {
-	request, err := check.toCheckRequest(principal, attributes)
+func (client *permifyCheckClient) check(
+	ctx context.Context,
+	principal *Resource,
+	attributes Attributes,
+	check Check,
+) (bool, error) {
+	if check.Depth == nil {
+		check.Depth = &client.defaultDepth
+	}
+	request, err := check.toCheckRequest(ctx, principal, attributes, client.schemaVersion)
 	if err != nil {
 		return false, err
 	}
-	res, err := client.Client.Check(ctx, request)
+	res, err := client.client.Check(ctx, request)
 	if err != nil {
 		return false, err
 	}
